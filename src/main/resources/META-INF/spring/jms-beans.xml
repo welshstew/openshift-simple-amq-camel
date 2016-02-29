@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:camel="http://camel.apache.org/schema/spring" xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <bean id="activemq"
+          class="org.apache.activemq.camel.component.ActiveMQComponent">
+        <property name="configuration" ref="amqConfig"/>
+    </bean>
+
+    <bean id="amqConfig"
+          class="org.apache.activemq.camel.component.ActiveMQConfiguration">
+        <property name="connectionFactory" ref="pooledConnectionFactory"/>
+        <property name="concurrentConsumers" value="${ACTIIVEMQ_CONCURRENTCONSUMERS:1}"/>
+        <property name="useMessageIDAsCorrelationID" value="true" />
+        <property name="cacheLevelName" value="CACHE_CONSUMER" />
+        <property name="transacted" value="true"/>
+        <property name="transactionManager" ref="jmsTransactionManager"/>
+    </bean>
+
+    <bean id="pooledConnectionFactory"
+          class="org.apache.activemq.pool.PooledConnectionFactory" init-method="start" destroy-method="stop">
+        <property name="connectionFactory" ref="amqConnectionFactory" />
+        <property name="maxConnections" value="${ACTIIVEMQ_MAXCONNECTIONS:1}" />
+        <property name="createConnectionOnStartup" value="false" />
+        <property name="idleTimeout" value="30000" />
+    </bean>
+
+    <bean id="jmsTransactionManager" class="org.springframework.jms.connection.JmsTransactionManager">
+        <property name="connectionFactory" ref="pooledConnectionFactory" />
+    </bean>
+
+    <bean id="amqConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <property name="brokerURL" value="${ACTIIVEMQ_BROKERURL}"/>
+        <property name="userName" value="${ACTIIVEMQ_USERNAME}" />
+        <property name="password" value="${ACTIIVEMQ_PASSWORD}" />
+        <property name="clientIDPrefix" value="${ACTIIVEMQ_CLIENTIDPREFIX}" />
+        <property name="watchTopicAdvisories" value="false" />
+    </bean>
+</beans>
